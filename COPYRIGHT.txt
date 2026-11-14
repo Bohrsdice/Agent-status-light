@@ -1,0 +1,7 @@
+Agent 红绿灯 / Agent Light
+Copyright © 2026 Bohrsdice
+
+本版权声明适用于本项目原创代码与图标，不更改第三方组件的原有许可证。
+nlohmann/json 使用 MIT 许可证；Zstandard 使用 BSD 许可证。
+完整第三方许可证位于源码 native/vendor/，并嵌入 EXE 资源。
+项目地址：https://github.com/Bohrsdice/agent-light

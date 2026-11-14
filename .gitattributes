@@ -10,3 +10,4 @@
 *.png binary
 *.zstd binary
 native/vendor/** -whitespace
+*.ico binary

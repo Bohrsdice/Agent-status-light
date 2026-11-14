@@ -3,7 +3,7 @@
 - 仓库只包含源代码、构建脚本、使用说明、合成测试数据和纯图标预览。
 - `runtime/`、`build/`、`dist/`、本机 `config.json`、聊天日志、数据库、屏幕截图、调试转储、密钥和环境配置不提交到 Git。
 - 豆包测试在临时目录生成合成 V8 / LevelDB 数据，不使用真实聊天缓存。DeepSeek 的四个压缩测试片段仅包含虚构的 fixture 会话与生命周期事件。
-- 发布包仅含 `CodexLight.exe` 和 `使用说明.txt`。不打包 `%LOCALAPPDATA%/CodexLight`、Agent 配置或聊天目录。
+- 发布包仅含 `CodexLight.exe`、`使用说明.txt` 和 `COPYRIGHT.txt`。不打包 `%LOCALAPPDATA%/CodexLight`、Agent 配置或聊天目录。
 - 程序在本机读取支持的 Agent 状态，不上传聊天记录。运行诊断可能包含本机项目路径、会话标识和状态；分享问题报告前应自行脱敏这些文件。
 - Cursor / WorkBuddy 的集成会合并注册本机 Hooks，并备份已有配置；这些配置与备份留在本机。
 

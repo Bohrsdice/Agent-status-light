@@ -2,11 +2,13 @@
 
 下载便携版：[GitHub Releases](https://github.com/Bohrsdice/agent-light/releases)。解压后运行 `CodexLight.exe`；从源码构建后，文件位于 `dist/`。
 
+![程序图标](docs/app-icon.png)
+
 ![五种灯样式](docs/lamp-styles.png)
 
 源码不包含本机聊天记录、账户配置或调试截图；隐私与发布范围见 [PRIVACY.md](PRIVACY.md)。
 
-## 一盏灯起步，按需加灯（0.12.0）
+## 一盏灯起步，按需加灯（0.12.1）
 
 **直接双击 `dist/CodexLight.exe` 或运行 `启动红绿灯.cmd`。默认只有一盏自动跟随的标准圆灯，不带字母。** 同时打开多个 Agent 也不会自动增加图标。后台独立读取 Codex、Cursor、豆包、WorkBuddy、DeepSeek Harness 的原生状态，再将一个 Agent 分配给每盏灯。
 
@@ -26,13 +28,13 @@
 
 自动跟随规则：已绑定的运行中或等待确认任务保持绑定，暂时读取失败时也不抢走灯；明确结束后保留约 2 秒再匹配。首次匹配优先最近使用的运行中 Agent，否则优先待回答、较新的运行任务；没有活动任务时跟随最近使用的已打开应用。手动绑定始终保持，即使对应应用关闭也只显示灰灯。额外自动灯避免匹配其他灯已经占用的 Agent；所有候选均占用时保持灰色等待。
 
-每约 2 秒发现应用窗口，最小化仍监控。适配器使用独立工作线程。Cursor/WorkBuddy 被发现时合并注册本机 Hooks（保留并备份原配置），其余只读数据。配置保存至 `%LOCALAPPDATA%/CodexLight/monitor-settings.json`，包含灯的稳定编号、绑定和样式。旧 0.9.0 的多灯配置迁移为一盏自动圆灯。开机启动默认关闭，只有手动勾选才写当前用户启动项。
+每约 2 秒发现应用窗口，最小化仍监控。适配器使用独立工作线程。Cursor/WorkBuddy 被发现时合并注册本机 Hooks（保留并备份原配置），其余只读数据。配置保存至 `%LOCALAPPDATA%/CodexLight/monitor-settings.json`，包含灯的稳定编号、绑定和样式。旧 0.9.0 的多灯配置迁移为一盏自动圆灯。首次使用默认启用当前用户开机启动；右键取消后会记住，升级时保留已有设置。
 
 根目录 `status.json` / `tray-display.json` 的 `lamps` 数组记录实际灯数量、绑定、样式和颜色；`agents` 记录各适配器状态。后台适配器的诊断文件仍在 `agents/<agent>`，其托盘注册状态为 false，因为实际图标由灯管理器控制。灯的 GUID 与稳定编号关联，更换绑定或样式不改变标识。Windows 仍可能将首次出现的灯折叠，需要用户拖出。
 
-`native/lamp-test.cmd` 的 29 项检查覆盖配置迁移、五种样式、自动跟随和绑定独立性；`native/lamp-ui-test.cmd` 的 16 项检查执行真实菜单处理函数及 Windows 托盘注册，验证加删灯、换样式、改绑、离线状态和重载。`native/popup-test.cmd` 的 8 项检查验证原生菜单键盘、子菜单、按钮调用、滚动及关闭清理。测试使用独立临时目录，不修改 Agent 配置或开机启动设置。`native/lamp-preview.cmd` 可生成同一渲染器的 16/24/32/48 像素、明暗背景预览。
+`native/lamp-test.cmd` 的 29 项检查覆盖配置迁移、五种样式、自动跟随和绑定独立性；`native/lamp-ui-test.cmd` 的 22 项检查执行真实菜单处理函数及 Windows 托盘注册，验证加删灯、换样式、改绑、离线状态、重载和首次自启/关闭后重启/旧设置迁移。自启测试仅使用独立测试注册表键。`native/popup-test.cmd` 的 8 项检查验证原生菜单键盘、子菜单、按钮调用、滚动及关闭清理。测试使用独立临时目录，不修改 Agent 配置或开机启动设置。`native/lamp-preview.cmd` 可生成同一渲染器的 16/24/32/48 像素、明暗背景预览。
 
-旧固定单 Agent 模式保留：`--codex`、`--cursor`、`--doubao`、`--workbuddy`、`--deepseek`。默认与 `--all` 均进入新版灯管理模式；`--home` / `--snapshot` 保留原单 Agent 行为。一个数据目录只允许一个监控进程，切换模式需先退出。0.12.0 仍是原生 C++ 单文件，无额外运行库。旧单 Agent 的 6 项 EXE 集成回归也已通过。
+旧固定单 Agent 模式保留：`--codex`、`--cursor`、`--doubao`、`--workbuddy`、`--deepseek`。默认与 `--all` 均进入新版灯管理模式；`--home` / `--snapshot` 保留原单 Agent 行为。一个数据目录只允许一个监控进程，切换模式需先退出。0.12.1 仍是原生 C++ 单文件，无额外运行库。旧单 Agent 的 6 项 EXE 集成回归也已通过。
 
 ## DeepSeek Harness 模式（0.8.0）
 
@@ -166,3 +168,5 @@
 JSON 解析使用 nlohmann/json v3.12.0，MIT 许可证在 `native/vendor/LICENSE.nlohmann-json`，并嵌入 EXE 的 RCDATA 100 资源。头文件 SHA-256：`aaf127c04cb31c406e5b04a63f1ae89369fccde6d8fa7cdda1ed4f32dfc5de63`。
 
 根目录 Python 代码和 `tests/` 是先前原型，保留用于对照；发布版不包含或调用它们。原型的配置示例为 `config.example.json`；本机 `config.json` 不纳入 Git。`启动红绿灯.cmd` 已改为启动 C++ EXE。
+
+Copyright © 2026 Bohrsdice。程序文件图标为蓝绿色拟态灯，托盘颜色仍表示任务状态。

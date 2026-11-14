@@ -11,11 +11,12 @@ inline const std::vector<std::wstring>& styleLabels(){static const std::vector<s
 inline bool validStyle(const std::string& s){auto& v=styles();return std::find(v.begin(),v.end(),s)!=v.end();}
 struct Config {unsigned id=1;std::string agent="auto",style="circle";};
 struct Settings {
-    std::vector<Config> items{{}};unsigned nextId=2;
+    std::vector<Config> items{{}};unsigned nextId=2;bool startupConfigured=false,startup=false;
     static Settings read(const Json& value) {
         Settings result;
         // Previous automatic multi-icon settings deliberately migrate to one lamp.
         if(!value.is_object() || !value.contains("version") || value["version"]!=2 || !value.contains("lamps") || !value["lamps"].is_array())return result;
+        if(value.contains("startup") && value["startup"].is_boolean()){result.startupConfigured=true;result.startup=value["startup"].get<bool>();}
         std::vector<Config> items;std::set<unsigned> ids;
         for(const auto& item:value["lamps"]) {
             if(items.size()>=8)break;
@@ -35,6 +36,7 @@ struct Settings {
     }
     Json json() const {
         Json value={{"version",2},{"next_id",nextId},{"lamps",Json::array()}};
+        if(startupConfigured)value["startup"]=startup;
         for(const auto& item:items)value["lamps"].push_back({{"id",item.id},{"agent",item.agent},{"style",item.style}});
         return value;
     }
@@ -72,9 +74,10 @@ struct Follow {
     }
 };
 inline double clamp(double value,double low=0,double high=1){return std::max(low,std::min(high,value));}
-inline std::vector<DWORD> renderIcon(const std::string& style,const std::string& state,int size=32) {
+inline std::vector<DWORD> renderIcon(const std::string& style,const std::string& state,int size=32,COLORREF custom=CLR_INVALID) {
     COLORREF color=state=="running"?RGB(244,62,58):state=="waiting"?RGB(255,196,30):
         state=="completed" || state=="idle"?RGB(30,212,100):RGB(138,150,162);
+    if(custom!=CLR_INVALID)color=custom;
     std::vector<DWORD> pixels(size*size);
     // Supersampling keeps the bezel and circular status surround readable at
     // native 16/20/24px tray sizes. Render once, never animate or poll graphics.

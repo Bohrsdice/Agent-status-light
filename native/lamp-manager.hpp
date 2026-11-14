@@ -7,6 +7,7 @@ struct MultiApp {
     std::map<std::string,HICON> icons;
     UINT taskbarCreated=0;Time lastScan=0,lastWrite=0;int foreground=-1;
     bool menuOpen=false;Json previous;
+    std::wstring startupKey=L"Software\\Microsoft\\Windows\\CurrentVersion\\Run";
     explicit MultiApp(fs::path directory,HANDLE event,const fs::path& codexHome):data(std::move(directory)),stopEvent(event) {
         settings=lamps::Settings::read(readSmall(data/L"monitor-settings.json"));
         fs::path dsh=environment(L"DSH_HOME");if(dsh.empty())dsh=knownFolder(FOLDERID_Profile)/L".dsh";
@@ -24,14 +25,22 @@ struct MultiApp {
     }
     bool startupEnabled() const {
         wchar_t value[32768]{};DWORD bytes=sizeof(value),type=0;
-        return RegGetValueW(HKEY_CURRENT_USER,L"Software\\Microsoft\\Windows\\CurrentVersion\\Run",L"CodexLight",RRF_RT_REG_SZ,&type,value,&bytes)==ERROR_SUCCESS && std::wstring(value)==startupCommand();
+        return RegGetValueW(HKEY_CURRENT_USER,startupKey.c_str(),L"CodexLight",RRF_RT_REG_SZ,&type,value,&bytes)==ERROR_SUCCESS && std::wstring(value)==startupCommand();
     }
     void setStartup(bool enabled) {
         HKEY key=nullptr;
-        if(RegCreateKeyExW(HKEY_CURRENT_USER,L"Software\\Microsoft\\Windows\\CurrentVersion\\Run",0,nullptr,0,KEY_SET_VALUE,nullptr,&key,nullptr)!=ERROR_SUCCESS)throw std::runtime_error("startup setting");
+        if(RegCreateKeyExW(HKEY_CURRENT_USER,startupKey.c_str(),0,nullptr,0,KEY_SET_VALUE,nullptr,&key,nullptr)!=ERROR_SUCCESS)throw std::runtime_error("startup setting");
         auto command=startupCommand();
         auto code=enabled?RegSetValueExW(key,L"CodexLight",0,REG_SZ,reinterpret_cast<const BYTE*>(command.c_str()),(DWORD)((command.size()+1)*sizeof(wchar_t))):RegDeleteValueW(key,L"CodexLight");
         RegCloseKey(key);if(code!=ERROR_SUCCESS && code!=ERROR_FILE_NOT_FOUND)throw std::runtime_error("startup setting");
+    }
+    void initializeStartup() {
+        if(settings.startupConfigured)return;
+        auto next=settings;next.startupConfigured=true;
+        // Migrate existing installations without overriding a previous opt-out.
+        next.startup=fs::exists(data/L"monitor-settings.json")?startupEnabled():true;
+        bool changed=next.startup && !startupEnabled();if(changed)setStartup(true);
+        try{save(std::move(next));}catch(...){if(changed)setStartup(false);throw;}
     }
     void syncLights() {
         std::set<unsigned> ids;for(auto& config:settings.items)ids.insert(config.id);
@@ -53,7 +62,7 @@ struct MultiApp {
         try {
             if(choice==1){SetEvent(stopEvent);return;}
             if(choice==2){if(target>=0)agents[target]->openAgent();return;}
-            if(choice==210){setStartup(!startupEnabled());return;}
+            if(choice==210){bool before=startupEnabled();auto next=settings;next.startupConfigured=true;next.startup=!before;setStartup(next.startup);try{save(std::move(next));}catch(...){setStartup(before);throw;}return;}
             if(choice>=500 && choice-500<view.choices.size() && target>=0) {
                 std::lock_guard<std::mutex> lock(agents[target]->mutex);agents[target]->manual=view.choices[choice-500].id;return;
             }
@@ -191,9 +200,10 @@ struct MultiApp {
         for(const auto& style:lamps::styles())for(const auto& state:{"running","waiting","completed","idle","interrupted","unknown"}) {
             auto icon=lamps::createIcon(style,state);if(!icon)throw std::runtime_error("lamp icon");icons[std::string(style)+":"+state]=icon;
         }
-        WNDCLASSW cls{};cls.lpfnWndProc=procedure;cls.hInstance=GetModuleHandleW(nullptr);cls.lpszClassName=L"CodexLight.Native.Manager";
+        WNDCLASSW cls{};cls.lpfnWndProc=procedure;cls.hInstance=GetModuleHandleW(nullptr);cls.lpszClassName=L"CodexLight.Native.Manager";cls.hIcon=LoadIconW(cls.hInstance,MAKEINTRESOURCEW(1));
         if(!RegisterClassW(&cls))throw std::runtime_error("manager window class");
         window=CreateWindowExW(0,cls.lpszClassName,L"",0,0,0,0,0,nullptr,nullptr,cls.hInstance,this);if(!window)throw std::runtime_error("manager window");
+        try{initializeStartup();}catch(const std::exception&){try{atomicWrite(data/L"autostart-error.json",{{"reason","无法设置开机启动；监控继续运行，可从菜单重试"},{"time_ms",now()}});}catch(const std::exception&){} }
         for(auto& app:agents){app->present=!agentWindows(app->agentKey()).empty();app->start();}
         syncLights();update();SetTimer(window,1,500,nullptr);
         MSG message{};while(GetMessageW(&message,nullptr,0,0)>0){TranslateMessage(&message);DispatchMessageW(&message);}

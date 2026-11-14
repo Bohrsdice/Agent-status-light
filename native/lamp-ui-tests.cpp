@@ -1,5 +1,5 @@
 // Exercise the actual menu command handlers and Windows tray registration using
-// isolated synthetic states. No agent configuration, prompts or startup keys.
+// Isolated synthetic states and a test-only registry key, never the real Run key.
 #include "main.cpp"
 #include <iostream>
 int main(){int checks=0;auto check=[&](bool condition,const char* message){if(!condition)throw std::runtime_error(message);++checks;};
@@ -35,6 +35,17 @@ int main(){int checks=0;auto check=[&](bool condition,const char* message){if(!c
     app.command(spare,124,4,{});app.command(spare,101,4,{});
     check(app.settings.items.back().style=="arcane" && app.settings.items.back().agent=="codex","changing binding preserves chosen style");
     app.command(spare,120,0,{});check(app.settings.items.back().style=="circle" && app.settings.items.back().agent=="codex","generic lamp retains explicit binding");
+    auto registry=L"Software\\AgentLightTests\\Startup-"+std::to_wstring(GetCurrentProcessId());
+    MultiApp fresh(temp/L"fresh",stop,temp/L"codex");fresh.startupKey=registry;fresh.initializeStartup();
+    check(fresh.startupEnabled() && fresh.settings.startupConfigured && fresh.settings.startup,"first launch defaults to startup");
+    auto persisted=lamps::Settings::read(readSmall(temp/L"fresh"/L"monitor-settings.json"));
+    check(persisted.startupConfigured && persisted.startup,"startup preference saved");
+    fresh.command(1,210,-1,{});check(!fresh.startupEnabled() && !fresh.settings.startup,"menu disables startup");
+    MultiApp disabled(temp/L"fresh",stop,temp/L"codex");disabled.startupKey=registry;disabled.initializeStartup();
+    check(!disabled.startupEnabled() && disabled.settings.startupConfigured,"restart preserves opt-out");
+    disabled.command(1,210,-1,{});check(disabled.startupEnabled() && disabled.settings.startup,"menu enables startup again");disabled.setStartup(false);
+    app.startupKey=registry;app.initializeStartup();check(!app.startupEnabled() && !app.settings.startup,"legacy settings preserve disabled startup");
+    RegDeleteKeyW(HKEY_CURRENT_USER,registry.c_str());
     for(auto& lamp:app.lights)Shell_NotifyIconW(NIM_DELETE,&lamp.second.icon);
     for(auto& icon:app.icons)DestroyIcon(icon.second);DestroyWindow(app.window);
     CoUninitialize();CloseHandle(stop);std::cout<<checks<<" native lamp UI checks passed\nFixture: "<<utf8(temp.wstring())<<'\n';return 0;
