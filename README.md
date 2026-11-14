@@ -1,6 +1,10 @@
-# Agent 红绿灯 · C++ 便携版
+# Agent状态灯
 
-下载便携版：[GitHub Releases](https://github.com/Bohrsdice/agent-light/releases)。解压后运行 `CodexLight.exe`；从源码构建后，文件位于 `dist/`。
+一个轻量的 Windows 托盘工具，让 AI Agent 在后台工作时，你也能一眼看到任务进度：红灯表示运行中，黄灯表示等待回答或确认，绿灯表示本轮结束，灰灯表示中断或状态未知。支持 Codex、Cursor、豆包、WorkBuddy 和 DeepSeek Harness，点击灯即可切回对应应用。
+
+程序为免安装的原生 C++ 单文件，支持自动跟随或手动选择 Agent、按需增加灯和切换五种样式。
+
+下载便携版：[GitHub Releases](https://github.com/Bohrsdice/Agent-status-light/releases)。解压后运行 `CodexLight.exe`；从源码构建后，文件位于 `dist/`。
 
 ![程序图标](docs/app-icon.png)
 
