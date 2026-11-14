@@ -1,0 +1,26 @@
+__pycache__/
+runtime/
+startup-error.log
+*.tmp
+build/
+dist/
+# Local settings, captures, credentials and generated diagnostics
+/config.json
+.env
+.env.*
+!.env.example
+*.log
+*.jsonl
+*.db
+*.sqlite*
+*.vscdb
+*.dmp
+*.pdb
+*.obj
+*.exe
+*.zip
+*.pem
+*.key
+.vs/
+.idea/
+.vscode/

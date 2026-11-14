@@ -1,0 +1,29 @@
+#include <windows.h>
+#pragma code_page(65001)
+100 RCDATA "vendor\\LICENSE.nlohmann-json"
+101 RCDATA "vendor\\LICENSE.zstd"
+
+1 VERSIONINFO
+FILEVERSION 0,12,0,0
+PRODUCTVERSION 0,12,0,0
+FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+FILEFLAGS 0
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+BEGIN
+ BLOCK "StringFileInfo"
+ BEGIN
+  BLOCK "080404B0"
+  BEGIN
+   VALUE "FileDescription", "Agent 红绿灯 — 自动任务状态指示器\0"
+   VALUE "FileVersion", "0.12.0\0"
+   VALUE "ProductName", "Agent 红绿灯（独立工具）\0"
+   VALUE "ProductVersion", "0.12.0\0"
+   VALUE "OriginalFilename", "CodexLight.exe\0"
+  END
+ END
+ BLOCK "VarFileInfo"
+ BEGIN
+  VALUE "Translation", 0x0804, 1200
+ END
+END
